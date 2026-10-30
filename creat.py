@@ -9,7 +9,6 @@ def filter_large_csv_by_stay_ids(input_file, output_file, key_col, chunksize=100
     total_rows_kept = 0
     for i, chunk in enumerate(reader):
         filtered_chunk = chunk[chunk[key_col].isin(valid_ids)]
-        filtered_chunk = filtered_chunk[["observation_tables/", "patientid", "value"]]
         total_rows_kept += len(filtered_chunk)
 
         if first_chunk:
@@ -24,10 +23,12 @@ def merge_rename_converse(input_csv, output_csv):
 
     df = pd.read_csv(input_csv)
 
+    df = df[["observation_tables/", "patientid", "value"]]
     df.rename(columns={'patientid': 'subject_id'}, inplace=True)
     df.rename(columns={'observation_tables/': 'charttime'}, inplace=True)
 
     df = df.drop_duplicates(keep='first')
+    df = df.dropna(subset=['value'])
     df['value'] = df['value'].apply(lambda x: x * 0.0113)
 
     df.to_csv(output_csv, index=False)
@@ -38,4 +39,4 @@ def merge_rename_converse(input_csv, output_csv):
 if __name__ == "__main__":
 
     filter_large_csv_by_stay_ids('../../hirid/observation_tables.csv', './creat.csv', 'variableid')
-    merge_rename_converse('./creat.csv', './creat2.csv')
+    merge_rename_converse('./creat.csv', './creat.csv')
